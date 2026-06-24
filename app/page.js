@@ -64,7 +64,6 @@ export default function AIApp() {
     const targetGDD = 2400;
     const daysRemaining = Math.max(0, Math.ceil((targetGDD - cumulativeGDD)/(dailyGDD || 1)));
 
-    // Sigmoid growth curve
     const curve = Array.from({ length: 50 }, (_, i) => {
       const x = i / 50;
       const y = 1 / (1 + Math.exp(-10 * (x - 0.5)));
@@ -73,7 +72,7 @@ export default function AIApp() {
 
     const currentX = (cumulativeGDD / targetGDD) * 50;
 
-    setOutput({ fert, avgTemp, dailyGDD, cumulativeGDD, stage, daysRemaining, curve, currentX });
+    setOutput({ fert, avgTemp, dailyGDD, cumulativeGDD, stage, daysRemaining, curve, currentX, variety:v });
   };
 
   const askAI = () => {
@@ -99,21 +98,37 @@ export default function AIApp() {
     <div style={{padding:20,maxWidth:900,margin:"auto",fontFamily:"Arial"}}>
       <h1 style={{textAlign:"center"}}>🍠 AI Agronomy System (Pro)</h1>
 
+      {/* TOP SECTION: Variety + Inputs */}
+      <h3>Variety & Field Setup</h3>
+      <select name="variety" onChange={handleChange}>
+        {Object.keys(varieties).map(v => <option key={v}>{v}</option>)}
+      </select>
+      <br/><br/>
       <input name="plantingDate" type="date" onChange={handleChange} />
+      <br/>
       <input placeholder="Latitude" name="lat" onChange={handleChange} />
+      <br/>
       <input placeholder="Longitude" name="lon" onChange={handleChange} />
+      <br/><br/>
 
       <button onClick={calculate}>Run Model</button>
 
       {output && (
-        <div>
-          <h2>Growth Stage: {output.stage}</h2>
-          <p>Cumulative GDD: {output.cumulativeGDD.toFixed(0)}</p>
+        <div style={{marginTop:20}}>
 
-          <h3>Fertilizer</h3>
-          <p>N: {output.fert.N}</p>
-          <p>P: {output.fert.P}</p>
-          <p>K: {output.fert.K}</p>
+          {/* TOP OUTPUT: Fertility */}
+          <h2>🌱 Fertility Recommendation</h2>
+          <p>N: {output.fert.N} lbs/ac</p>
+          <p>P: {output.fert.P} lbs/ac</p>
+          <p>K: {output.fert.K} lbs/ac</p>
+          <p><b>Variety Type:</b> {inputs.variety} ({output.variety.type})</p>
+
+          {/* LOWER SECTION: GDD & GROWTH */}
+          <h2 style={{marginTop:20}}>🌦 Growth & GDD Model</h2>
+          <p>Avg Temp: {output.avgTemp.toFixed(1)}°F</p>
+          <p>Daily GDD: {output.dailyGDD.toFixed(1)}</p>
+          <p>Cumulative GDD: {output.cumulativeGDD.toFixed(0)}</p>
+          <p><strong>Growth Stage: {output.stage}</strong></p>
 
           <h3>Growth Curve</h3>
           <svg width="100%" height="200">
@@ -125,10 +140,12 @@ export default function AIApp() {
 
           <h3>⏱ Days to Harvest</h3>
           <p>{output.daysRemaining} days</p>
+
         </div>
       )}
 
-      <h2>💬 Ask AI</h2>
+      {/* CHATBOX AT BOTTOM */}
+      <h2 style={{marginTop:30}}>💬 Ask AI</h2>
       <input value={question} onChange={(e)=>setQuestion(e.target.value)} />
       <button onClick={askAI}>Ask</button>
 
