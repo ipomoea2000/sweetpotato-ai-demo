@@ -6,7 +6,9 @@ export default function AdvancedFertilityApp() {
     variety: "Bayou Belle",
     soilP: "",
     soilK: "",
-    pH: ""
+    pH: "",
+    plantingDate: "",
+    avgTemp: ""
   });
 
   const [output, setOutput] = useState(null);
@@ -17,27 +19,17 @@ export default function AdvancedFertilityApp() {
     "Bayou Belle": {
       type: "Efficient non-responder",
       adjustment: { N: -0.1, P: -0.2, K: -0.1 },
-      note: "Performs well under low fertility; minimal response to added inputs"
+      note: "Performs well under low fertility"
     },
     "Evangeline": {
       type: "Inefficient non-responder",
       adjustment: { N: 0.2, P: 0.2, K: 0.1 },
-      note: "Requires higher fertility to maintain yield"
+      note: "Requires higher fertility"
     },
     "Orleans": {
       type: "Efficient responder",
       adjustment: { N: 0.2, P: 0, K: 0.2 },
-      note: "Highly responsive to N and K inputs"
-    },
-    "Beauregard": {
-      type: "Variable",
-      adjustment: { N: 0.1, P: 0.1, K: 0.1 },
-      note: "Moderate and inconsistent response"
-    },
-    "Murasaki": {
-      type: "Limited data",
-      adjustment: { N: 0, P: 0, K: 0.1 },
-      note: "Moderate K sensitivity; limited data"
+      note: "Responds strongly to N and K"
     }
   };
 
@@ -60,25 +52,40 @@ export default function AdvancedFertilityApp() {
 
     let lime = Number(inputs.pH) < 5.8 ? "Apply lime to reach pH ~6.0" : "No lime required";
 
-    setOutput({ adjusted, lime, varietyInfo: v });
+    // GDD Calculation
+    const Tbase = 60;
+    const avgTemp = Number(inputs.avgTemp);
+    const dailyGDD = Math.max(0, avgTemp - Tbase);
+    const targetGDD = 2400;
+
+    const daysToHarvest = Math.ceil(targetGDD / (dailyGDD || 1));
+
+    let harvestDate = "";
+    if (inputs.plantingDate) {
+      const plantDate = new Date(inputs.plantingDate);
+      plantDate.setDate(plantDate.getDate() + daysToHarvest);
+      harvestDate = plantDate.toDateString();
+    }
+
+    setOutput({
+      adjusted,
+      lime,
+      harvestDate,
+      daysToHarvest,
+      varietyInfo: v
+    });
   };
 
   const askAI = () => {
     let response = "";
     const v = varieties[inputs.variety];
 
-    if (question.toLowerCase().includes("why")) {
-      response = `The recommendation reflects that ${inputs.variety} is a ${v.type}. ${v.note}. Fertilizer rates adjust based on efficiency and responsiveness.`;
-    } else if (question.toLowerCase().includes("best variety")) {
-      if (Number(inputs.soilP) > 30 && Number(inputs.soilK) > 120) {
-        response = "High fertility fields favor responsive varieties like Orleans.";
-      } else {
-        response = "Lower fertility fields are better suited to efficient varieties like Bayou Belle.";
-      }
-    } else if (question.toLowerCase().includes("nitrogen") || question.toLowerCase().includes("N")) {
-      response = `${inputs.variety} shows ${v.type} behavior, so nitrogen rates are adjusted accordingly.`;
+    if (question.toLowerCase().includes("harvest")) {
+      response = `Harvest is estimated based on degree day accumulation (~2400 GDD for sweetpotato maturity).`;
+    } else if (question.toLowerCase().includes("why")) {
+      response = `${inputs.variety} is a ${v.type}. ${v.note}, which influences fertilizer recommendations.`;
     } else {
-      response = "This tool integrates variety response and soil conditions to guide fertilizer decisions.";
+      response = "This tool integrates variety response, soil fertility, and weather-driven growth modeling.";
     }
 
     setChat([...chat, { q: question, a: response }]);
@@ -86,65 +93,57 @@ export default function AdvancedFertilityApp() {
   };
 
   return (
-    <div style={{ fontFamily: "Arial", maxWidth: 900, margin: "auto", padding: 20 }}>
-      <h1 style={{ textAlign: "center" }}>🍠 AI Fertility + Variety Decision Tool</h1>
+    <div style={{ fontFamily: "Arial", maxWidth: 800, margin: "auto", padding: 20 }}>
+      <h1 style={{ textAlign: "center" }}>🍠 AI Fertility + Growth Model Tool</h1>
 
-      <div>
-        <h3>Select Variety</h3>
-        <select name="variety" value={inputs.variety} onChange={handleChange}>
-          {Object.keys(varieties).map((v) => (
-            <option key={v}>{v}</option>
-          ))}
-        </select>
-      </div>
+      <h3>Variety</h3>
+      <select name="variety" value={inputs.variety} onChange={handleChange}>
+        {Object.keys(varieties).map((v) => (
+          <option key={v}>{v}</option>
+        ))}
+      </select>
 
-      <div>
-        <h3>Field Conditions</h3>
-        <input placeholder="Soil P (ppm)" name="soilP" onChange={handleChange} /> <br />
-        <input placeholder="Soil K (ppm)" name="soilK" onChange={handleChange} /> <br />
-        <input placeholder="Soil pH" name="pH" onChange={handleChange} />
-      </div>
+      <h3>Field Conditions</h3>
+      <input placeholder="Soil P" name="soilP" onChange={handleChange} /><br/>
+      <input placeholder="Soil K" name="soilK" onChange={handleChange} /><br/>
+      <input placeholder="Soil pH" name="pH" onChange={handleChange} /><br/>
+
+      <h3>Weather Inputs</h3>
+      <input type="date" name="plantingDate" onChange={handleChange} /><br/>
+      <input placeholder="Average Temp (°F)" name="avgTemp" onChange={handleChange} /><br/>
 
       <br />
-      <button onClick={calculate}>Generate Recommendation</button>
+      <button onClick={calculate}>Run AI Model</button>
 
       {output && (
         <div style={{ marginTop: 20, border: "1px solid #ccc", padding: 15 }}>
-          <h2>Recommendation</h2>
-          <p>N: {output.adjusted.N} lbs/ac</p>
-          <p>P2O5: {output.adjusted.P} lbs/ac</p>
-          <p>K2O: {output.adjusted.K} lbs/ac</p>
+          <h2>Fertilizer Recommendation</h2>
+          <p>N: {output.adjusted.N}</p>
+          <p>P: {output.adjusted.P}</p>
+          <p>K: {output.adjusted.K}</p>
           <p>{output.lime}</p>
 
-          <h3>Variety Insight</h3>
-          <p><strong>{inputs.variety}</strong> – {output.varietyInfo.type}</p>
-          <p>{output.varietyInfo.note}</p>
+          <h2>Harvest Prediction</h2>
+          <p>Estimated harvest date: {output.harvestDate}</p>
+          <p>Days to harvest: {output.daysToHarvest}</p>
         </div>
       )}
 
-      <div style={{ marginTop: 30 }}>
-        <h2>💬 Ask AI</h2>
-        <input
-          placeholder="Ask about fertilizer, variety, or field conditions"
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          style={{ width: "70%" }}
-        />
-        <button onClick={askAI}>Ask</button>
+      <h2>💬 Ask AI</h2>
+      <input
+        value={question}
+        onChange={(e) => setQuestion(e.target.value)}
+        placeholder="Ask about growth, harvest, or fertilizer"
+      />
+      <button onClick={askAI}>Ask</button>
 
-        <div style={{ marginTop: 15 }}>
-          {chat.map((c, i) => (
-            <div key={i} style={{ marginBottom: 10 }}>
-              <strong>Q:</strong> {c.q}<br />
-              <strong>A:</strong> {c.a}
-            </div>
-          ))}
+      {chat.map((c, i) => (
+        <div key={i}>
+          <strong>Q:</strong> {c.q}<br />
+          <strong>A:</strong> {c.a}
         </div>
-      </div>
+      ))}
 
-      <p style={{ color: "red", marginTop: 20 }}>
-        ⚠️ Educational demo. Validate with LSU AgCenter recommendations.
-      </p>
     </div>
   );
 }
