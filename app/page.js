@@ -4,19 +4,24 @@ import React, { useState } from "react";
 export default function AIApp() {
   const [inputs, setInputs] = useState({
     variety: "Bayou Belle",
+    fertility: "medium",
     lat: "",
     lon: "",
     plantingDate: ""
   });
 
   const [output, setOutput] = useState(null);
-  const [chat, setChat] = useState([]);
-  const [question, setQuestion] = useState("");
 
   const varieties = {
     "Bayou Belle": { adj: { N: -0.1, P: -0.2, K: -0.1 }, type:"Efficient" },
     "Orleans": { adj: { N: 0.2, P: 0, K: 0.2 }, type:"Responsive" },
     "Evangeline": { adj: { N: 0.2, P: 0.2, K: 0.1 }, type:"High input" }
+  };
+
+  const fertilityAdjustment = {
+    low: { N: 1.2, P: 1.2, K: 1.2 },
+    medium: { N: 1, P: 1, K: 1 },
+    high: { N: 0.8, P: 0.8, K: 0.8 }
   };
 
   const handleChange = (e) => {
@@ -26,11 +31,12 @@ export default function AIApp() {
   const calculate = async () => {
     const base = { N: 45, P: 80, K: 150 };
     const v = varieties[inputs.variety];
+    const fAdj = fertilityAdjustment[inputs.fertility];
 
     let fert = {
-      N: Math.round(base.N * (1 + v.adj.N)),
-      P: Math.round(base.P * (1 + v.adj.P)),
-      K: Math.round(base.K * (1 + v.adj.K))
+      N: Math.round(base.N * (1 + v.adj.N) * fAdj.N),
+      P: Math.round(base.P * (1 + v.adj.P) * fAdj.P),
+      K: Math.round(base.K * (1 + v.adj.K) * fAdj.K)
     };
 
     let avgTemp = 75;
@@ -61,104 +67,45 @@ export default function AIApp() {
     if (stage === "Root Initiation") fert.N -= 10;
     if (stage === "Bulking") fert.K += 25;
 
-    const targetGDD = 2400;
-    const daysRemaining = Math.max(0, Math.ceil((targetGDD - cumulativeGDD)/(dailyGDD || 1)));
-
-    const curve = Array.from({ length: 50 }, (_, i) => {
-      const x = i / 50;
-      const y = 1 / (1 + Math.exp(-10 * (x - 0.5)));
-      return { x: i, y: y * 100 };
-    });
-
-    const currentX = (cumulativeGDD / targetGDD) * 50;
-
-    setOutput({ fert, avgTemp, dailyGDD, cumulativeGDD, stage, daysRemaining, curve, currentX, variety:v });
-  };
-
-  const askAI = () => {
-    let response = "";
-
-    if (!output) {
-      response = "Run the model first to enable AI insights.";
-    } else if (question.toLowerCase().includes("why")) {
-      response = `System adjusted fertilizer because crop is in ${output.stage}. Nutrient demand changes with growth stage.`;
-    } else if (question.toLowerCase().includes("stage")) {
-      response = `Crop is currently in ${output.stage} based on ${Math.round(output.cumulativeGDD)} GDD.`;
-    } else if (question.toLowerCase().includes("harvest")) {
-      response = `Estimated ${output.daysRemaining} days remaining to reach maturity.`;
-    } else {
-      response = "This AI integrates weather, crop development, and variety response to guide decisions.";
-    }
-
-    setChat([...chat, { q: question, a: response }]);
-    setQuestion("");
+    setOutput({ fert, stage, cumulativeGDD });
   };
 
   return (
-    <div style={{padding:20,maxWidth:900,margin:"auto",fontFamily:"Arial"}}>
-      <h1 style={{textAlign:"center"}}>🍠 AI Agronomy System (Pro)</h1>
+    <div style={{ padding:20, maxWidth:900, margin:"auto" }}>
+      <h1>🍠 AI Agronomy System</h1>
 
-      {/* TOP PANEL: VARIETY + FERTILITY */}
-      <div style={{border:"2px solid #4CAF50", padding:15, borderRadius:8, marginBottom:20}}>
-        <h2>🌱 Variety & Fertility</h2>
+      <h3>Variety</h3>
+      <select name="variety" onChange={handleChange}>
+        {Object.keys(varieties).map(v => <option key={v}>{v}</option>)}
+      </select>
 
-        <label>Variety</label><br/>
-        <select name="variety" onChange={handleChange}>
-          {Object.keys(varieties).map(v => <option key={v}>{v}</option>)}
-        </select>
+      <h3>Field Fertility</h3>
+      <select name="fertility" onChange={handleChange}>
+        <option value="low">Low</option>
+        <option value="medium">Medium</option>
+        <option value="high">High</option>
+      </select>
 
-        <br/><br/>
-        <input name="plantingDate" type="date" onChange={handleChange} />
-        <br/>
-        <input placeholder="Latitude" name="lat" onChange={handleChange} />
-        <br/>
-        <input placeholder="Longitude" name="lon" onChange={handleChange} />
+      <h3>Inputs</h3>
+      <input type="date" name="plantingDate" onChange={handleChange} /><br/>
+      <input placeholder="Lat" name="lat" onChange={handleChange} /><br/>
+      <input placeholder="Lon" name="lon" onChange={handleChange} />
 
-        <br/><br/>
-        <button onClick={calculate}>Run Model</button>
+      <br/>
+      <button onClick={calculate}>Run Model</button>
 
-        {/* SHOW FERTILITY RIGHT HERE */}
-        {output && (
-          <div style={{marginTop:15, background:"#f4fff4", padding:10}}>
-            <h3>Recommendation</h3>
-            <p>N: {output.fert.N} lbs/ac</p>
-            <p>P: {output.fert.P} lbs/ac</p>
-            <p>K: {output.fert.K} lbs/ac</p>
-            <p><b>Type:</b> {inputs.variety} ({output.variety.type})</p>
-          </div>
-        )}
-      </div>
-
-      {/* GDD + GROWTH */}
       {output && (
-        <div style={{marginTop:10}}>
-          <h2>🌦 Growth & GDD Model</h2>
-          <p>Avg Temp: {output.avgTemp.toFixed(1)}°F</p>
-          <p>Daily GDD: {output.dailyGDD.toFixed(1)}</p>
-          <p>Cumulative GDD: {output.cumulativeGDD.toFixed(0)}</p>
-          <p><strong>Stage: {output.stage}</strong></p>
+        <div style={{ marginTop:20 }}>
+          <h2>Fertilizer Recommendation</h2>
+          <p>N: {output.fert.N}</p>
+          <p>P: {output.fert.P}</p>
+          <p>K: {output.fert.K}</p>
 
-          <svg width="100%" height="200">
-            {output.curve.map((p,i)=>(
-              <circle key={i} cx={p.x*6} cy={200-p.y*2} r="2" fill="green" />
-            ))}
-            <line x1={output.currentX*6} x2={output.currentX*6} y1="0" y2="200" stroke="red" strokeWidth="2" />
-          </svg>
-
-          <p>⏱ {output.daysRemaining} days to harvest</p>
+          <h3>Stage</h3>
+          <p>{output.stage}</p>
+          <p>GDD: {output.cumulativeGDD.toFixed(0)}</p>
         </div>
       )}
-
-      {/* CHAT */}
-      <h2 style={{marginTop:30}}>💬 Ask AI</h2>
-      <input value={question} onChange={(e)=>setQuestion(e.target.value)} />
-      <button onClick={askAI}>Ask</button>
-
-      {chat.map((c,i)=>(
-        <div key={i}><b>Q:</b> {c.q}<br/><b>A:</b> {c.a}</div>
-      ))}
-
-      <p style={{color:"red"}}>⚠️ Educational demo only.</p>
     </div>
   );
 }
