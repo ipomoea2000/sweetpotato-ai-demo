@@ -114,15 +114,16 @@ export default function AIApp() {
   return (
     <div style={{padding:20,maxWidth:900,margin:"auto",fontFamily:"Arial"}}>
 
-      {/* HEADER WITH LOGO */}
+      {/* HEADER */}
       <div style={{textAlign:"center", marginBottom:10}}>
-        <div style={{fontSize:40}}>🌱🍠</div>
+        <div style={{fontSize:36}}>🌱🍠</div>
         <h1>AI4SP - Data-Driven Agronomy Decision Tool (AI-Assisted)</h1>
         <p style={{color:"#555"}}>
           Ground-truthed decision support for sweetpotato integrating variety response, soil fertility, and crop growth conditions
         </p>
       </div>
 
+      {/* INPUT PANEL */}
       <div style={{border:"2px solid green", padding:15, borderRadius:10}}>
         <h2>🌱 Variety + Field Setup</h2>
 
@@ -141,9 +142,9 @@ export default function AIApp() {
 
         <br/><br/>
 
-        <label>Override Stage (optional)</label><br/>
+        <label>Override Stage</label><br/>
         <select name="stageOverride" value={inputs.stageOverride} onChange={handleChange}>
-          <option value="auto">Auto (GDD-based)</option>
+          <option value="auto">Auto</option>
           <option value="Emergence">Emergence</option>
           <option value="Root Initiation">Root Initiation</option>
           <option value="Bulking">Bulking</option>
@@ -170,11 +171,11 @@ export default function AIApp() {
         )}
       </div>
 
+      {/* OUTPUT */}
       {output && (
         <div style={{marginTop:20}}>
           <h2>🌦 Growth</h2>
-          <p>Stage: <b>{output.stage}</b></p>
-          <p>GDD: {output.cumulativeGDD.toFixed(0)}</p>
+          <p><b>{output.stage}</b> | GDD: {output.cumulativeGDD.toFixed(0)}</p>
 
           <svg width="100%" height="200">
             {output.curve.map((p,i)=>(
@@ -196,11 +197,13 @@ export default function AIApp() {
         </div>
       )}
 
+      {/* CHAT */}
       <h2>💬 Ask AI</h2>
       <input value={question} onChange={(e)=>setQuestion(e.target.value)} />
       <button onClick={askAI}>Ask</button>
 
       {chat.map((c,i)=>(<div key={i}><b>Q:</b> {c.q}<br/><b>A:</b> {c.a}</div>))}
+
     </div>
   );
 }
