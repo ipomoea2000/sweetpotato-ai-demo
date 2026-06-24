@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import { Analytics } from "@vercel/analytics/react";
 
 export default function AIApp() {
   const defaultInputs = {
@@ -203,7 +204,7 @@ export default function AIApp() {
       <button onClick={askAI}>Ask</button>
 
       {chat.map((c,i)=>(<div key={i}><b>Q:</b> {c.q}<br/><b>A:</b> {c.a}</div>))}
-
+<Analytics />
     </div>
   );
 }
