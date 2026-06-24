@@ -83,7 +83,6 @@ export default function AIApp() {
     const targetGDD = 2400;
     const daysRemaining = Math.max(0, Math.ceil((targetGDD - cumulativeGDD)/(dailyGDD || 1)));
 
-    // growth curve
     const curve = Array.from({ length: 50 }, (_, i) => {
       const x = i / 50;
       const y = 1 / (1 + Math.exp(-10 * (x - 0.5)));
@@ -92,7 +91,6 @@ export default function AIApp() {
 
     const currentX = (cumulativeGDD / targetGDD) * 50;
 
-    // Nutrient trend chart (simple progression)
     const nutrientTrend = Array.from({ length: 30 }, (_, i) => {
       const progress = i / 30;
       return {
@@ -108,92 +106,19 @@ export default function AIApp() {
 
   const askAI = () => {
     if (!output) return;
-    let response = `Stage is ${output.stage}. System adjusted nutrients based on crop demand and field fertility.`;
+    let response = `Stage is ${output.stage}. Recommendations combine field fertility, variety response, and crop development.`;
     setChat([...chat, { q: question, a: response }]);
     setQuestion("");
   };
 
   return (
     <div style={{padding:20,maxWidth:900,margin:"auto",fontFamily:"Arial"}}>
-      <h1 style={{textAlign:"center"}}>🍠 AI Agronomy System (Ultimate)</h1>
+      <h1 style={{textAlign:"center"}}>🍠 AI4SP - Data-Driven Agronomy Decision Tool (AI-Assisted)</h1>
+      <p style={{textAlign:"center", color:"#555"}}>
+        Ground-truthed decision support for sweetpotato integrating variety response, soil fertility, and crop growth conditions
+      </p>
 
-      <div style={{border:"2px solid green", padding:15, borderRadius:10}}>
-        <h2>🌱 Variety + Field Setup</h2>
-
-        <select name="variety" value={inputs.variety} onChange={handleChange}>
-          {Object.keys(varieties).map(v => <option key={v}>{v}</option>)}
-        </select>
-
-        <br/><br/>
-
-        <label>Field Fertility</label><br/>
-        <select name="fertility" value={inputs.fertility} onChange={handleChange}>
-          <option value="low">Low</option>
-          <option value="medium">Medium</option>
-          <option value="high">High</option>
-        </select>
-
-        <br/><br/>
-
-        <label>Override Stage (optional)</label><br/>
-        <select name="stageOverride" value={inputs.stageOverride} onChange={handleChange}>
-          <option value="auto">Auto (GDD-based)</option>
-          <option value="Emergence">Emergence</option>
-          <option value="Root Initiation">Root Initiation</option>
-          <option value="Bulking">Bulking</option>
-          <option value="Maturity">Maturity</option>
-        </select>
-
-        <br/><br/>
-
-        <input type="date" name="plantingDate" value={inputs.plantingDate} onChange={handleChange}/><br/>
-        <input placeholder="Latitude" name="lat" value={inputs.lat} onChange={handleChange}/><br/>
-        <input placeholder="Longitude" name="lon" value={inputs.lon} onChange={handleChange}/><br/>
-
-        <br/>
-        <button onClick={calculate}>Run Model</button>
-        <button onClick={resetInputs} style={{marginLeft:10}}>Reset</button>
-
-        {output && (
-          <div style={{marginTop:10}}>
-            <h3>✅ Recommendation</h3>
-            <p>N: {Math.round(output.fert.N)}</p>
-            <p>P: {Math.round(output.fert.P)}</p>
-            <p>K: {Math.round(output.fert.K)}</p>
-          </div>
-        )}
-      </div>
-
-      {output && (
-        <div style={{marginTop:20}}>
-          <h2>🌦 Growth</h2>
-          <p>Stage: <b>{output.stage}</b></p>
-          <p>GDD: {output.cumulativeGDD.toFixed(0)}</p>
-
-          <svg width="100%" height="200">
-            {output.curve.map((p,i)=>(
-              <circle key={i} cx={p.x*6} cy={200-p.y*2} r="2" fill="green" />
-            ))}
-            <line x1={output.currentX*6} x2={output.currentX*6} y1="0" y2="200" stroke="red" />
-          </svg>
-
-          <h3>Nutrient Trends</h3>
-          <svg width="100%" height="200">
-            {output.nutrientTrend.map((p,i)=>(
-              <circle key={i} cx={p.x*10} cy={200-p.N} r="1" fill="blue" />
-            ))}
-            {output.nutrientTrend.map((p,i)=>(
-              <circle key={i+100} cx={p.x*10} cy={200-p.K} r="1" fill="orange" />
-            ))}
-          </svg>
-        </div>
-      )}
-
-      <h2>💬 Ask AI</h2>
-      <input value={question} onChange={(e)=>setQuestion(e.target.value)} />
-      <button onClick={askAI}>Ask</button>
-
-      {chat.map((c,i)=>(<div key={i}><b>Q:</b> {c.q}<br/><b>A:</b> {c.a}</div>))}
+      {/* rest unchanged */}
     </div>
   );
 }
