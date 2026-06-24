@@ -98,53 +98,58 @@ export default function AIApp() {
     <div style={{padding:20,maxWidth:900,margin:"auto",fontFamily:"Arial"}}>
       <h1 style={{textAlign:"center"}}>🍠 AI Agronomy System (Pro)</h1>
 
-      {/* TOP SECTION: Variety + Inputs */}
-      <h3>Variety & Field Setup</h3>
-      <select name="variety" onChange={handleChange}>
-        {Object.keys(varieties).map(v => <option key={v}>{v}</option>)}
-      </select>
-      <br/><br/>
-      <input name="plantingDate" type="date" onChange={handleChange} />
-      <br/>
-      <input placeholder="Latitude" name="lat" onChange={handleChange} />
-      <br/>
-      <input placeholder="Longitude" name="lon" onChange={handleChange} />
-      <br/><br/>
+      {/* TOP PANEL: VARIETY + FERTILITY */}
+      <div style={{border:"2px solid #4CAF50", padding:15, borderRadius:8, marginBottom:20}}>
+        <h2>🌱 Variety & Fertility</h2>
 
-      <button onClick={calculate}>Run Model</button>
+        <label>Variety</label><br/>
+        <select name="variety" onChange={handleChange}>
+          {Object.keys(varieties).map(v => <option key={v}>{v}</option>)}
+        </select>
 
+        <br/><br/>
+        <input name="plantingDate" type="date" onChange={handleChange} />
+        <br/>
+        <input placeholder="Latitude" name="lat" onChange={handleChange} />
+        <br/>
+        <input placeholder="Longitude" name="lon" onChange={handleChange} />
+
+        <br/><br/>
+        <button onClick={calculate}>Run Model</button>
+
+        {/* SHOW FERTILITY RIGHT HERE */}
+        {output && (
+          <div style={{marginTop:15, background:"#f4fff4", padding:10}}>
+            <h3>Recommendation</h3>
+            <p>N: {output.fert.N} lbs/ac</p>
+            <p>P: {output.fert.P} lbs/ac</p>
+            <p>K: {output.fert.K} lbs/ac</p>
+            <p><b>Type:</b> {inputs.variety} ({output.variety.type})</p>
+          </div>
+        )}
+      </div>
+
+      {/* GDD + GROWTH */}
       {output && (
-        <div style={{marginTop:20}}>
-
-          {/* TOP OUTPUT: Fertility */}
-          <h2>🌱 Fertility Recommendation</h2>
-          <p>N: {output.fert.N} lbs/ac</p>
-          <p>P: {output.fert.P} lbs/ac</p>
-          <p>K: {output.fert.K} lbs/ac</p>
-          <p><b>Variety Type:</b> {inputs.variety} ({output.variety.type})</p>
-
-          {/* LOWER SECTION: GDD & GROWTH */}
-          <h2 style={{marginTop:20}}>🌦 Growth & GDD Model</h2>
+        <div style={{marginTop:10}}>
+          <h2>🌦 Growth & GDD Model</h2>
           <p>Avg Temp: {output.avgTemp.toFixed(1)}°F</p>
           <p>Daily GDD: {output.dailyGDD.toFixed(1)}</p>
           <p>Cumulative GDD: {output.cumulativeGDD.toFixed(0)}</p>
-          <p><strong>Growth Stage: {output.stage}</strong></p>
+          <p><strong>Stage: {output.stage}</strong></p>
 
-          <h3>Growth Curve</h3>
           <svg width="100%" height="200">
-            {output.curve.map((p, i) => (
-              <circle key={i} cx={p.x * 6} cy={200 - p.y * 2} r="2" fill="green" />
+            {output.curve.map((p,i)=>(
+              <circle key={i} cx={p.x*6} cy={200-p.y*2} r="2" fill="green" />
             ))}
             <line x1={output.currentX*6} x2={output.currentX*6} y1="0" y2="200" stroke="red" strokeWidth="2" />
           </svg>
 
-          <h3>⏱ Days to Harvest</h3>
-          <p>{output.daysRemaining} days</p>
-
+          <p>⏱ {output.daysRemaining} days to harvest</p>
         </div>
       )}
 
-      {/* CHATBOX AT BOTTOM */}
+      {/* CHAT */}
       <h2 style={{marginTop:30}}>💬 Ask AI</h2>
       <input value={question} onChange={(e)=>setQuestion(e.target.value)} />
       <button onClick={askAI}>Ask</button>
