@@ -1,9 +1,4 @@
 import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { motion } from "framer-motion";
-
 export default function FertilityDemo() {
   const [data, setData] = useState({ P: "", K: "", pH: "", yieldGoal: "" });
   const [result, setResult] = useState(null);
@@ -11,7 +6,6 @@ export default function FertilityDemo() {
   const handleChange = (e) => {
     setData({ ...data, [e.target.name]: e.target.value });
   };
-
   const loadScenario = (scenario) => {
     if (scenario === "low") {
       setData({ P: "20", K: "80", pH: "5.5", yieldGoal: "500" });
@@ -35,85 +29,57 @@ export default function FertilityDemo() {
     let lime = "Not required";
     const kVal = Number(data.K);
     if (kVal < 100) K = 130;
-
     const yieldAdj = Number(data.yieldGoal);
     if (yieldAdj > 600) {
       N += 15;
       K += 20;
     }
-
     if (Number(data.pH) < 5.8) {
       lime = "Apply lime to reach pH ~6.0";
     }
-
-
     setResult({ N, P, K, lime });
-
-
     setExplanation(
-      `Based on your inputs: Potassium is ${interpretLevel(data.K, "K")}, phosphorus is ${interpretLevel(data.P, "P")}. ` +
+      `Potassium is ${interpretLevel(data.K, "K")} and phosphorus is ${interpretLevel(data.P, "P")}. ` +
       `Higher yield goals increase nutrient demand, especially nitrogen and potassium. ` +
-      `pH influences nutrient availability, so liming may be required if below optimal range.`
+      `Low pH reduces nutrient availability, so liming may be needed.`
     );
   };
-
-
   return (
-    <div className="p-6 grid gap-6 max-w-2xl mx-auto">
-      <motion.h1 initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-2xl font-bold text-center">
-        LSU AgCenter Extension Demo 🌱 Sweetpotato Fertility AI
-      </motion.h1>
+    <div style={{ fontFamily: "Arial", padding: 20, maxWidth: 600, margin: "auto" }}>
+      <h1 style={{ textAlign: "center" }}>
+        LSU AgCenter 🌱 Sweetpotato Fertility AI Demo
+      </h1>
 
-      <Card>
-        <CardContent className="grid gap-3 p-4">
-          <p className="font-semibold">Try a scenario:</p>
-          <div className="flex gap-2 flex-wrap">
-            <Button onClick={() => loadScenario("low")}>Low fertility</Button>
-            <Button onClick={() => loadScenario("high")}>High fertility</Button>
-            <Button onClick={() => loadScenario("intensive")}>High yield</Button>
-          </div>
-        </CardContent>
-      </Card>
+      <div style={{ marginBottom: 20 }}>
+        <strong>Try a scenario:</strong><br />
+        <button onClick={() => loadScenario("low")} style={{ marginRight: 10 }}>Low fertility</button>
+        <button onClick={() => loadScenario("high")} style={{ marginRight: 10 }}>High fertility</button>
+        <button onClick={() => loadScenario("intensive")}>High yield</button>
+      </div>
 
-      <Card>
-        <CardContent className="grid gap-4 p-4">
-          <Input placeholder="Soil Test P" name="P" value={data.P} onChange={handleChange} />
-          <Input placeholder="Soil Test K" name="K" value={data.K} onChange={handleChange} />
-          <Input placeholder="Soil pH" name="pH" value={data.pH} onChange={handleChange} />
-          <Input placeholder="Yield Goal (bu/ac)" name="yieldGoal" value={data.yieldGoal} onChange={handleChange} />
-          <Button onClick={calculate}>Get Recommendation</Button>
-        </CardContent>
-      </Card>
+      <div style={{ marginBottom: 20 }}>
+        <input placeholder="Soil Test P" name="P" value={data.P} onChange={handleChange} /><br /><br />
+        <input placeholder="Soil Test K" name="K" value={data.K} onChange={handleChange} /><br /><br />
+        <input placeholder="Soil pH" name="pH" value={data.pH} onChange={handleChange} /><br /><br />
+        <input placeholder="Yield Goal (bu/ac)" name="yieldGoal" value={data.yieldGoal} onChange={handleChange} /><br /><br />
+        <button onClick={calculate}>Get Recommendation</button>
+      </div>
 
       {result && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-          <Card>
-            <CardContent className="p-4 space-y-3">
-              <h2 className="text-xl font-semibold">Recommendation</h2>
-              <p>🌱 Nitrogen: {result.N} lbs/acre</p>
-              <p>🌿 Phosphorus: {result.P} lbs P2O5</p>
-              <p>🍠 Potassium: {result.K} lbs K2O</p>
-              <p>🪨 Lime: {result.lime}</p>
+        <div style={{ border: "1px solid #ccc", padding: 15 }}>
+          <h2>Recommendation</h2>
+          <p>🌱 Nitrogen: {result.N} lbs/acre</p>
+          <p>🌿 Phosphorus: {result.P} lbs P2O5</p>
+          <p>🍠 Potassium: {result.K} lbs K2O</p>
+          <p>🪨 Lime: {result.lime}</p>
 
-              <div>
-                <h3 className="font-semibold">Nutrient Visual</h3>
-                <div className="space-y-1">
-                  <div>N: <div style={{ width: result.N }} className="bg-green-400 h-3" /></div>
-                  <div>K: <div style={{ width: result.K }} className="bg-yellow-400 h-3" /></div>
-                </div>
-              </div>
+          <h3>AI Explanation</h3>
+          <p>{explanation}</p>
 
-              <div>
-                <h3 className="font-semibold">AI Explanation</h3>
-                <p className="text-sm">{explanation}</p>
-              </div>
-
-              <p className="text-sm text-red-600 font-medium">
-                ⚠️ Educational demo only. Consult LSU AgCenter recommendations for official guidance.
-              </p>
-            </CardContent>
-          </Card>
-        </motion.div>
+          <p style={{ color: "red" }}>
+            ⚠️ Educational demo only. Consult LSU AgCenter recommendations for official guidance.
+          </p>
+        </div>
       )}
     </div>
   );
